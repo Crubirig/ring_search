@@ -1,0 +1,51 @@
+COMPND    Si O2
+COMPND   1Created by VESTA
+HETATM    1 Si1                  0.000   0.000   0.000  1.00  0.00          Si
+HETATM    2 Si1                  0.000   3.560   3.560  1.00  0.00          Si
+HETATM    3 Si1                  3.560   3.560   0.000  1.00  0.00          Si
+HETATM    4 Si1                  3.560   0.000   3.560  1.00  0.00          Si
+HETATM    5 Si1                  5.340   1.780   5.340  1.00  0.00          Si
+HETATM    6 Si1                  1.780   1.780   1.780  1.00  0.00          Si
+HETATM    7 Si1                  1.780   5.340   5.340  1.00  0.00          Si
+HETATM    8 Si1                  5.340   5.340   1.780  1.00  0.00          Si
+HETATM    9 O1                   0.890   0.890   0.890  1.00  0.00           O
+HETATM   10 O1                   6.230   2.670   4.450  1.00  0.00           O
+HETATM   11 O1                   2.670   4.450   6.230  1.00  0.00           O
+HETATM   12 O1                   4.450   6.230   2.670  1.00  0.00           O
+HETATM   13 O1                   2.670   6.230   4.450  1.00  0.00           O
+HETATM   14 O1                   6.230   4.450   2.670  1.00  0.00           O
+HETATM   15 O1                   4.450   2.670   6.230  1.00  0.00           O
+HETATM   16 O1                   0.890   4.450   4.450  1.00  0.00           O
+HETATM   17 O1                   6.230   6.230   0.890  1.00  0.00           O
+HETATM   18 O1                   2.670   0.890   2.670  1.00  0.00           O
+HETATM   19 O1                   2.670   2.670   0.890  1.00  0.00           O
+HETATM   20 O1                   6.230   0.890   6.230  1.00  0.00           O
+HETATM   21 O1                   4.450   0.890   4.450  1.00  0.00           O
+HETATM   22 O1                   0.890   6.230   6.230  1.00  0.00           O
+HETATM   23 O1                   0.890   2.670   2.670  1.00  0.00           O
+HETATM   24 O1                   4.450   4.450   0.890  1.00  0.00           O
+CONECT    1    9
+CONECT    2   23   16
+CONECT    3   24   19
+CONECT    4   18   21
+CONECT    5   21   20   10   15
+CONECT    6   23    9   18   19
+CONECT    7   22   16   13   11
+CONECT    8   24   12   14   17
+CONECT    9    1    6
+CONECT   10    5
+CONECT   11    7
+CONECT   12    8
+CONECT   13    7
+CONECT   14    8
+CONECT   15    5
+CONECT   16    2    7
+CONECT   17    8
+CONECT   18    4    6
+CONECT   19    3    6
+CONECT   20    5
+CONECT   21    4    5
+CONECT   22    7
+CONECT   23    2    6
+CONECT   24    3    8
+END
