@@ -3,15 +3,17 @@ import time
 import numpy as np
 
 def ring_counting(T_atoms:list, silica_graph, max_ring=14):
-    Total_ring_amount, primitive_ring = rings_search(SI_atoms=T_atoms, graph=silica_graph, Max_ring_size=max_ring)
+    primitive_ring = rings_search(SI_atoms=T_atoms, graph=silica_graph, Max_ring_size=max_ring)
+    Total_ring_amount = {}
     for i in np.arange(2, max_ring):
         Total_ring_amount[i] = 0
         for SI_index in T_atoms:                    
-            Total_ring_amount[i] += len(primitive_ring[f"SI{SI_index}"][i])
+            Total_ring_amount[i] += len(primitive_ring[SI_index][i])
     ring_per_si = dict()
     for i in Total_ring_amount:
-        print(f"{Total_ring_amount[i]/len(T_atoms):.1f} {i}-membered ring(s) per Si atom")
-        ring_per_si[i] = Total_ring_amount[i]/len(T_atoms)
+        if i%2 == 0:
+            print(f"{Total_ring_amount[i]:.1f} {i}-membered ring(s)")
+            ring_per_si[i] = Total_ring_amount[i]
     return primitive_ring, ring_per_si
     
 
@@ -41,9 +43,8 @@ def rings_search(SI_atoms:list, graph, Max_ring_size:int=14):
     print(f"It took {graph_finished - time_to_graph} seconds to compute shortest_path_length")
     shortest_path = {}
     primitive_ring = {}
-    Total_ring_amount = {}
     for SI_index in SI_atoms:
-        primitive_ring[f"SI{SI_index}"] = {}
+        primitive_ring[SI_index] = {}
         shortest_path[SI_index] = {}
         # STEP 1:Searching for potential prime_mid nodes among the lvldist (list of all shortest paths)
         # A prime mid node is the furthest node from the source node ("the first node of the ring") in a primitive ring
@@ -91,8 +92,8 @@ def rings_search(SI_atoms:list, graph, Max_ring_size:int=14):
                                 short_path[i].append(shortest_path[SI_index][j][k][:-1] + shortest_path[SI_index][j][l][::-1])
         #STEP 3:Among all primitive ring, delete those who contain shortcut
         for i in range(1, int(Max_ring_size/2)):
-            primitive_ring[f"SI{SI_index}"][i*2] = []
-            primitive_ring[f"SI{SI_index}"][i*2+1] = []
+            primitive_ring[SI_index][i*2] = []
+            primitive_ring[SI_index][i*2+1] = []
             for j in range(len(short_path[i*2])):
                 short_cut = 0
                 for k in range(1, i):
@@ -100,7 +101,7 @@ def rings_search(SI_atoms:list, graph, Max_ring_size:int=14):
                         short_cut += 1
                         break
                 if short_cut == 0:
-                    primitive_ring[f"SI{SI_index}"][i*2].append(short_path[i*2][j])
+                    primitive_ring[SI_index][i*2].append(short_path[i*2][j])
             for j in range(len(short_path[i*2 + 1])):
                 short_cut = 0
                 for k in range(1, i):
@@ -108,7 +109,7 @@ def rings_search(SI_atoms:list, graph, Max_ring_size:int=14):
                         short_cut += 1
                         break
                 if short_cut == 0:
-                    primitive_ring[f"SI{SI_index}"][i*2 + 1].append(short_path[i*2 + 1][j])
-    return([Total_ring_amount, primitive_ring])
+                    primitive_ring[SI_index][i*2 + 1].append(short_path[i*2 + 1][j])
+    return primitive_ring
 
 
