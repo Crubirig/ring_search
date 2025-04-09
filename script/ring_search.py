@@ -11,11 +11,8 @@ def ring_counting(T_atoms:list, silica_graph, max_ring=14):
             Total_ring_amount[i] += len(primitive_ring[SI_index][i])
     ring_per_si = dict()
     for i in Total_ring_amount:
-        if i%2 == 0:
-            print(f"{Total_ring_amount[i]:.1f} {i}-membered ring(s)")
-            ring_per_si[i] = Total_ring_amount[i]
+        ring_per_si[i] = Total_ring_amount[i]
     return primitive_ring, ring_per_si
-    
 
 def find_shortest_path(graph, starting_node:int, final_node:int, sortest_path_length:dict):
     #PREMIERE TENTATIVE
