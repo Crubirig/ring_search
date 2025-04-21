@@ -1,4 +1,5 @@
 import networkx as nx
+import time
 from itertools import combinations
 
 def primitive_ring_search(graph:nx.Graph, src_node:int=0, max_ring_size:int=10):
@@ -13,19 +14,21 @@ def primitive_ring_search(graph:nx.Graph, src_node:int=0, max_ring_size:int=10):
     primitive_ring =  {x:[] for x in range(4, max_ring_size)}
 
     shortest_paths = all_shortest_path_length[src_node]
-    for ring_size in range(4, max_ring_size):
-        for node, length in shortest_paths.items():
-            if length == ring_size//2:
-                if ring_size%2 == 0:
-                    neighb_dist = [all_shortest_path_length[neighbors][src_node] for neighbors in graph.neighbors(node)]
-                    if neighb_dist.count(ring_size//2 - 1) > 1:
-                        prime_mid_node[ring_size].append(node)
-                else:
-                    neighb_dist = {neighbors:all_shortest_path_length[neighbors][src_node] for neighbors in graph.neighbors(node)}
-                    for n, path in neighb_dist.items():
-                        if path == length and sorted([n, node]) not in prime_mid_node[ring_size]:
-                            prime_mid_node[ring_size].append(sorted([n, node]))
+    start_time = time.time()
 
+    for node, length in shortest_paths.items():
+        if length <= max_ring_size//2:
+            if length%2 == 0:
+                neighb_dist = [shortest_paths[neighbors] for neighbors in graph.neighbors(node)]
+                if neighb_dist.count(length - 1) > 1:
+                    prime_mid_node[2*length].append(node)
+            else:
+                neighb_dist = {neighbors:shortest_paths[neighbors] for neighbors in graph.neighbors(node)}
+                for n, path in neighb_dist.items():
+                    if path == length and sorted([n, node]) not in prime_mid_node[2*length + 1]:
+                        prime_mid_node[2*length + 1].append(sorted([n, node]))
+    end_time = time.time()
+    print(end_time -start_time)
     for ring_size, list_nodes in prime_mid_node.items():
         if ring_size%2 == 0:
             for nodes in list_nodes:
