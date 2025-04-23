@@ -24,3 +24,11 @@ def max_ring_adaptation(molecule:Atoms, periodic:bool=True, max_ring:int=20):
             extended_system = make_supercell(molecule, P=size_extension, wrap=False)
             print(f"Structure too small to compute every {max_ring}-rings, must create a {np.diag(size_extension)} supercell.")
     return extended_system
+
+def reduced_graph(silica_graph:nx.Graph, molecule):
+    si_index = [atom.index for atom in molecule if atom.symbol == "Si"]
+    silicon_graph = nx.Graph()
+    silicon_graph.add_nodes_from(si_index)
+    edges = [tuple(silica_graph.neighbors(oxygen.index)) for oxygen in molecule if oxygen.symbol == "O"]
+    silicon_graph.add_edges_from(edges)
+    return silicon_graph
