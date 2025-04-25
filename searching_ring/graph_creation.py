@@ -4,6 +4,7 @@ from ase.build.supercells import make_supercell
 
 import networkx as nx
 import numpy as np
+import itertools
 
 def create_graph_from_mol(molecule:Atoms):
     cutoffs = natural_cutoffs(molecule)
@@ -25,10 +26,16 @@ def max_ring_adaptation(molecule:Atoms, periodic:bool=True, max_ring:int=20):
             print(f"Structure too small to compute every {max_ring}-rings, must create a {np.diag(size_extension)} supercell.")
     return extended_system
 
-def reduced_graph(silica_graph:nx.Graph, molecule):
+def reduced_graph(silica_graph:nx.Graph, molecule:Atoms):
     si_index = [atom.index for atom in molecule if atom.symbol == "Si"]
+    edges = []
     silicon_graph = nx.Graph()
     silicon_graph.add_nodes_from(si_index)
-    edges = [tuple(silica_graph.neighbors(oxygen.index)) for oxygen in molecule if oxygen.symbol == "O"]
+    for oxygen in molecule:
+        if oxygen.symbol == "O":
+            neighbor_list = list(silica_graph.neighbors(oxygen.index))
+            if len(neighbor_list) > 1:
+                for pairs in itertools.combinations(neighbor_list, 2):
+                    edges.append(pairs) 
     silicon_graph.add_edges_from(edges)
     return silicon_graph
