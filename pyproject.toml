@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "searching_ring"
+name = "ring_search"
 version = "0.0.0"
 description = "Python script to compute primitive rings of silica structure"
 readme = "README.md"
