@@ -3,7 +3,43 @@ import time
 
 from itertools import combinations
 
-def find_all_shortest_paths(graph:nx.Graph, starting_node:int, final_node:int, sortest_path_length:dict) -> list[list]:
+import networkx as nx
+from collections import deque
+
+def find_all_shortest_paths(graph: nx.Graph, starting_node: int, final_node: int, shortest_path_length: dict) -> list[list]:
+    '''
+    Find all shortest paths between two nodes in a graph, knowing the length of those paths. 
+    This is much faster than when the length is not known.
+
+    Inputs:
+        graph: networkx Graph object
+        starting_node: starting node index
+        final_node: target node index
+        shortest_path_length: dict[dict[int]] containing shortest paths length for each node pair
+
+    Outputs:
+        A list of every shortest path between the starting and target node
+    '''
+    queue = deque([[starting_node]])  # Using deque for better performance on queue operations
+    paths = []
+
+    while queue:
+        path_so_far = queue.popleft()  # Pop from the front of the queue
+        current_node = path_so_far[-1]
+
+        # If we reach the final node, append the path to results
+        if current_node == final_node:
+            paths.append(path_so_far)
+            continue
+
+        for neighbor in nx.all_neighbors(graph, current_node):
+            # Only explore neighbors that can potentially lead to the shortest path
+            if shortest_path_length[neighbor][final_node] < shortest_path_length[current_node][final_node] and neighbor not in path_so_far:
+                queue.append(path_so_far + [neighbor])
+
+    return paths
+
+def old_find_all_shortest_paths(graph:nx.Graph, starting_node:int, final_node:int, sortest_path_length:dict) -> list[list]:
     '''
     Find all shortest paths between two nodes in a graph knowing the length of those paths. 
     This is much faster than when the length is not known.
