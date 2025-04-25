@@ -41,3 +41,4 @@ Homepage = "https://github.com/Crubirig/ring_search"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["searching_ring"]
