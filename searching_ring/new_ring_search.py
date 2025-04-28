@@ -20,8 +20,11 @@ def find_all_shortest_paths(graph: nx.Graph, starting_node: int, final_node: int
     Outputs:
         A list of every shortest path between the starting and target node
     '''
+
     queue = deque([[starting_node]])  # Using deque for better performance on queue operations
     paths = []
+    if final_node not in shortest_path_length[starting_node].keys(): # check if a path exists between starting and final node
+        queue = []
 
     while queue:
         path_so_far = queue.popleft()  # Pop from the front of the queue
@@ -68,10 +71,28 @@ def old_find_all_shortest_paths(graph:nx.Graph, starting_node:int, final_node:in
             queue.remove(nodcrt)
     return path
 
-def find_prime_mid_nodes(src_node:int, shortest_dist_dict:dict[dict[list]], max_ring_size:int, graph:nx.Graph):
-    shortest_paths = shortest_dist_dict[src_node]
-    prime_mid_node = {x:[] for x in range(2, max_ring_size + 1)}
+def find_prime_mid_nodes(graph:nx.Graph, src_node:int, shortest_dist_dict:dict[dict[list]], max_ring_size:int) -> dict:
+    '''
+    Find all prime mid node in a graph from a source node.
+    A prime mid node is a node that possesses at least two shortest paths of equal length to the source node.
+    Combining two shortest paths should lead to a primitive ring.
+    For each even rings, there is one prime-mid node
+    While for each odd rings there are two linked prime mid nodes
+    --------------------------------------------------------------------------------------------------------------
+    Inputs:
+
+        graph: networkx Graph object
+        src_node: source node index
+        shortest_dist_dict: dict[int] containing shortest paths length between the source node and each node in the graph
+        max_ring_size: size of the largest ring to investigate
+
+    Outputs:
+        A dict with future primitive ring as key and prime mid node as values (for odd rings, it is a list of the linked prime mid nodes)
+    
+    '''
+    prime_mid_node = {x:[] for x in range(2, max_ring_size + 2)}
     # start_time = time.time()
+    shortest_paths = shortest_dist_dict[src_node]
     for node, length in shortest_paths.items():
         if length <= max_ring_size//2 and length > 1:
             neighb_dist_list = [shortest_paths[neighbors] for neighbors in graph.neighbors(node)]
@@ -83,8 +104,24 @@ def find_prime_mid_nodes(src_node:int, shortest_dist_dict:dict[dict[list]], max_
                     prime_mid_node[2*length + 1].append(sorted([n, node]))
     return prime_mid_node
 
-def form_rings(prime_mid_node:dict, src_node:int, shortest_dist_dict:dict[dict[list]], max_ring_size:int, graph:nx.Graph):
-    future_rings  = {x:[] for x in range(2, max_ring_size + 1)}
+def form_rings(graph:nx.Graph, src_node:int, prime_mid_node:dict, shortest_dist_dict:dict[dict[list]], max_ring_size:int) -> dict:
+    '''
+    Form a ring from prime mid nodes by combining two shortest paths.
+    Exclude cases where two shortest paths share a node (other than initial or final)
+    ------------------------------------------------------------------------------------
+    Inputs:
+
+        graph: networkx Graph object
+        src_node: source node index
+        shortest_dist_dict: dict[int] containing shortest paths length between the source node and each node in the graph
+        prime_mid_node: dict[list] with ring size as keys and list of prime mid node as values
+        max_ring_size: size of the largest ring to investigate
+
+    Outputs:
+        A dict with ring size keys and the shortest path to combine to form rings
+    
+    '''
+    future_rings  = {x:[] for x in range(2, max_ring_size + 2)}
     for ring_size, list_nodes in prime_mid_node.items():
         if ring_size%2 == 0:
             for nodes in list_nodes:
@@ -102,8 +139,22 @@ def form_rings(prime_mid_node:dict, src_node:int, shortest_dist_dict:dict[dict[l
                             future_rings[ring_size].append([ring_a, ring_b])
     return future_rings
 
-def exclude_non_primitive_rings(potential_rings:dict, max_ring_size:int, shortest_dist_dict:dict[dict[list]]):
-    primitive_ring = {x:[] for x in range(2, max_ring_size + 1)}
+def exclude_non_primitive_rings(potential_rings:dict, max_ring_size:int, shortest_dist_dict:dict[dict[list]]) -> dict:
+    '''
+    Form primitive rings by combining two shortest paths.
+    Exclude cases where there exist a shortcut between the two shortest paths
+    ------------------------------------------------------------------------------------
+    Inputs:
+
+        potential_rings: dict[list] with ring size as keys and the shortest paths to combine to form rings
+        shortest_dist_dict: dict[int] containing shortest paths length between the source node and each node in the graph
+        max_ring_size: size of the largest ring to investigate
+
+    Outputs:
+        A dict with ring size keys and primitive rings as values
+    
+    '''
+    primitive_ring = {x:[] for x in range(2, max_ring_size + 2)}
     for ring_size, list_rings in potential_rings.items():
         for rings in list_rings:
             ring_a, ring_b = rings
@@ -115,10 +166,8 @@ def exclude_non_primitive_rings(potential_rings:dict, max_ring_size:int, shortes
             if shortcut == 0:
                 if ring_size%2 == 0:
                     primitive_ring[ring_size].append(ring_a[1:-1]+ring_b[::-1])
-                    # primitive_ring_count[ring_size] += 1
                 elif ring_size%2 == 1:
                     primitive_ring[ring_size].append(ring_a[:-1]+ring_b[::-1])
-                    # primitive_ring_count[ring_size] += 1
     return primitive_ring
 
 def find_primitive_ring(all_path_length:dict[dict[list]], graph:nx.Graph, src_node:int, max_dist:int):
@@ -146,7 +195,7 @@ def primitive_ring_search(graph:nx.Graph, node_list:list=None, max_ring_size:int
     print(f"Computing all primitive rings up to {max_ring_size}-rings on {len(node_list)} atoms took {end_time - start_time} seconds")
     # print(primitive_ring_count)
     if verbose is True:
-        primitive_ring_count = {x:0 for x in range(2, max_ring_size + 1)}
+        primitive_ring_count = {x:0 for x in range(2, max_ring_size + 2)}
         for src_node in node_list:
             for size, rings in all_rings[src_node].items():
                 primitive_ring_count[size] += len(rings)
