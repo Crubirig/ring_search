@@ -1,15 +1,19 @@
 import networkx as nx
+import numpy as np
+import matplotlib.pyplot as plt
+import time
 
 from itertools import combinations
 from collections import deque
 
 class Primitive_ring_search():
-    def __init__(self, graph:nx.Graph, max_size:int, distances:dict[dict]=None, src_nodes:list=[0]):
+    def __init__(self, graph:nx.Graph, max_size:int, distances:dict[dict]=None, src_nodes:list=[0], prim_rings:dict=None):
         self.graph = graph
         self.max_size = max_size
         self.src_nodes = src_nodes
         self.distances = distances if distances is not None else dict(
             nx.all_pairs_shortest_path_length(graph, cutoff=max_size//2 + 1))
+        self.prim_rings = prim_rings if prim_rings is not None else {x:[] for x in range(2, self.get_max_size() + 2)}
 
     def get_graph(self):
         return self.graph
@@ -76,13 +80,13 @@ class Primitive_ring_search():
         '''
         # start_time = time.time()
         mid_nodes =  {x:[] for x in range(2, self.get_max_size() + 2)}
-        shortest_paths = self.get_shortest_path_lengths()[src_node]
-        for node, length in shortest_paths.items():
+        src_shortest_paths = self.get_shortest_path_lengths()[src_node]
+        for node, length in src_shortest_paths.items():
             if length <= self.get_max_size()//2 and length > 1:
-                neighb_dist_list = [shortest_paths[neighbors] for neighbors in self.get_graph().neighbors(node)]
+                neighb_dist_list = [src_shortest_paths[neighbors] for neighbors in self.get_graph().neighbors(node)]
                 if neighb_dist_list.count(length - 1) > 1:
                     mid_nodes[2*length].append(node)
-                neighb_dist_dict = {neighbors:shortest_paths[neighbors] for neighbors in self.get_graph().neighbors(node)}
+                neighb_dist_dict = {neighbors:src_shortest_paths[neighbors] for neighbors in self.get_graph().neighbors(node)}
                 for n, path in neighb_dist_dict.items():
                     if path == length and sorted([n, node]) not in mid_nodes[2*length + 1]:
                         mid_nodes[2*length + 1].append(sorted([n, node]))
@@ -109,17 +113,18 @@ class Primitive_ring_search():
         for ring_size, list_nodes in prime_mid_node.items():
             if ring_size%2 == 0:
                 for nodes in list_nodes:
-                    for poss_ring in combinations(self.find_all_shortest_paths(starting_node=nodes, final_node=src_node), 2):
+                    paths = self.find_all_shortest_paths(starting_node=src_node, final_node=nodes)
+                    for poss_ring in combinations(paths, 2):
                         ring_a, ring_b = poss_ring
                         if len(set(ring_a[1:-1]) & set(ring_b[1:-1])) == 0:
                             rings[ring_size].append([ring_a, ring_b])
             elif ring_size%2 == 1:
                 for lnked_nodes in list_nodes:
-                    rings_a = self.find_all_shortest_paths(starting_node=lnked_nodes[0], final_node=src_node)
-                    rings_b = self.find_all_shortest_paths(starting_node=lnked_nodes[1], final_node=src_node)
+                    rings_a = self.find_all_shortest_paths(starting_node=src_node, final_node=lnked_nodes[0])
+                    rings_b = self.find_all_shortest_paths(starting_node=src_node, final_node=lnked_nodes[1])
                     for ring_a in rings_a:
                         for ring_b in rings_b:
-                            if len(set(ring_a[:-1]) & set(ring_b[:-1])) == 0:
+                            if len(set(ring_a[1:]) & set(ring_b[1:])) == 0:
                                 rings[ring_size].append([ring_a, ring_b])
         return rings
     
@@ -138,23 +143,55 @@ class Primitive_ring_search():
             A dict with ring size keys and primitive rings as values
         
         '''
+        missed_rings = {x:[] for x in range(2, self.get_max_size() + 2)}
         prim_rings =  {x:[] for x in range(2, self.get_max_size() + 2)}
+        shortest_lengths= self.get_shortest_path_lengths()
         for ring_size, list_rings in future_rings.items():
-            for rings in list_rings:
-                ring_a, ring_b = rings
-                shortcut = 0
-                for i in range(1, len(ring_a) - 1):
-                    if self.get_shortest_path_lengths()[ring_a[i]][ring_b[::-1][i]] != ring_size//2:
-                        shortcut += 1
-                        break
-                if shortcut == 0:
+            path_length = ring_size//2
+            if len(list_rings) > 0:
+                for ring_a, ring_b in list_rings:
+                    shortcut = 0
                     if ring_size%2 == 0:
-                        prim_rings[ring_size].append(ring_a[1:-1]+ring_b[::-1])
+                        full_ring = ring_a + ring_b[1:-1][::-1]
+                        for i in range(1, path_length):
+                            check_node_a = full_ring[i]
+                            check_node_b = full_ring[i + path_length]
+                            if shortest_lengths[check_node_a][check_node_b] != path_length:
+                                shortcut += 1
+                                break
+                        if shortcut == 0:
+                            prim_rings[ring_size].append(full_ring)
+                        elif shortcut == 1:
+                            missed_rings[ring_size].append(full_ring)
                     elif ring_size%2 == 1:
-                        prim_rings[ring_size].append(ring_a[:-1]+ring_b[::-1])
+                        full_ring = ring_a + ring_b[1:][::-1]
+                        for i in range(1, path_length + 1):
+                            check_node_a = full_ring[i]
+                            check_node_b1 = full_ring[i + path_length]
+                            check_node_b2 = full_ring[(1 + path_length + i)%ring_size]
+                            check_a = shortest_lengths[check_node_a][check_node_b1] - path_length
+                            check_b = shortest_lengths[check_node_a][check_node_b2] - path_length
+                            if check_a + check_b != 0:
+                                shortcut += 1
+                                break
+                        if shortcut == 0:
+                            prim_rings[ring_size].append(full_ring)
+                        elif shortcut == 1:
+                            missed_rings[ring_size].append(full_ring)
+
         return prim_rings
     
-    def single_node_search(self):
+    def search_primitive_ring(self):
+        '''
+        Search primitive rings following implementaion from Yuan et al. (https://doi.org/10.1016/S0927-0256(01)00256-7) in three steps:
+        1) Find potential prime mid nodes
+        2) Form rings from shortest paths between source nodes and prime nodes
+        3) Exclude rings that contain shortcut (non-primitive)
+        ------------------------------------------------------------------------------------------------------
+        Outputs:
+                A dict containing ring size as keys and list[list] of index forming rings
+        '''
+        start = time.time()
         all_rings = {x:[] for x in self.get_graph()}
         ring_count = {x:0 for x in range(2, self.get_max_size() + 2)}
         for src_node in self.src_nodes:
@@ -163,10 +200,30 @@ class Primitive_ring_search():
             primitive_rings = self.exclude_non_primitive_rings(future_rings=potential_rings)
             all_rings[src_node] = primitive_rings
             for size in primitive_rings:
-                ring_count[size] += len(primitive_rings[size])/len(self.src_nodes)
-        return all_rings, ring_count
+                ring_count[size] += len(primitive_rings[size])
+        self.prim_rings = ring_count
+        end = time.time()
+        print(f"Computing primitive rings on {len(self.src_nodes)} atoms took in total {end - start} seconds")
+        return all_rings
     
-    
+    def plot(self, color="blue", label_loc=0.005):
+        '''
+        Plot a bar chart of ring sizes and occurence.
+        -------------------------------------------------------------------
+        Inputs:
+                color: str a matploytlib color
+                label_loc float locate label of ring occurence
+        '''
+        ring_per_si = np.array(list(self.prim_rings.values()))
+
+        def addlabels(x,y, col, label_height):
+            for i in range(len(x)):
+                if y[i] - 0.00 > 0.05:
+                    plt.text(x[i], y[i] + label_height*max(y), f"{y[i]:.2f}", ha = 'center', size=7, c=col, weight="bold")
+
+        plt.bar(self.prim_rings.keys(), ring_per_si, color=color)
+        addlabels(x=list(self.prim_rings.keys()), y=ring_per_si, col=color, label_height=label_loc)
+        plt.xlabel("Ring size")
 
 
     
