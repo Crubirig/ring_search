@@ -8,7 +8,7 @@ import numpy as np
 from itertools import combinations
 
 class Molecule_To_Graph():
-    def __init__(self, structure:Atoms, periodic:bool=False, box_size:np.array=None, silica:bool=False, max_ring:int=20, nodes:list=None):
+    def __init__(self, structure:Atoms, periodic:np.array=np.full(3, False), box_size:np.array=None, silica:bool=False, max_ring:int=20, nodes:list=None):
         self.structure = structure
         self.periodic = periodic
         self.box_size = box_size
@@ -31,14 +31,15 @@ class Molecule_To_Graph():
         silicon_graph = nx.Graph()
         silicon_graph.add_nodes_from(si_index)
         for oxygen in self.structure:
-            if oxygen.symbol == "O":
+            if oxygen.symbol in ["O"]:
                 neighbor_list = list(self.graph.neighbors(oxygen.index))
                 if len(neighbor_list) > 1:
                     for pairs in combinations(neighbor_list, 2):
                         edges.append(pairs) 
         silicon_graph.add_edges_from(edges)
         self.graph = silicon_graph
-        self.nodes = self.graph.nodes
+        new_nodes = [index for index in self.nodes if self.structure[index].symbol == "Si"]
+        self.nodes = new_nodes
     
     def create_graph_from_mol(self):
         self.structure.pbc[False, False, False]
@@ -47,20 +48,22 @@ class Molecule_To_Graph():
         neighbor_list.update(self.structure)
         matrix = neighbor_list.get_connectivity_matrix()
         self.graph = nx.from_scipy_sparse_array(matrix)
-        self.nodes = range(len(self.graph))
+        if len(self.nodes) == 0:
+            self.nodes = range(len(self.graph))
 
     def super_cell_periodicity(self):
+        self.structure.pbc = self.periodic
         if self.box_size is not None:
             self.structure.cell = np.array(self.box_size)
-            self.structure.pbc = [True, True, True]
-        print(self.structure.cell, self.structure.pbc)
         self.max_ring_adaptation()
-        matrix = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]])
+        matrix = np.diag(self.periodic)*np.full(3, 3)
+        dimensionality = np.sum(np.array(self.periodic))
+        replica_to_chose = 3**dimensionality//2
+        self.nodes = [x + len(self.structure.get_atomic_numbers())*replica_to_chose for x in range(len(self.structure.get_atomic_numbers()))]
         self.structure = make_supercell(prim=self.structure, P=matrix)
-        self.nodes = [x + len(self.structure.get_atomic_numbers())*13 for x in range(len(self.structure.get_atomic_numbers()))]
 
     def full_routine(self):
-        if self.periodic == True:
+        if np.any(self.periodic):
             self.super_cell_periodicity()
         self.create_graph_from_mol()
         if self.silica == True:
