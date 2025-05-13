@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "searching_ring"
-version = "0.0.0"
+version = "0.0.1"
 description = "Python script to compute primitive rings of silica structure"
 readme = "README.md"
 license = { file = "LICENSE" }
