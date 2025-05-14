@@ -21,7 +21,7 @@ import networkx as nx
 
 # Create a graph
 graph = nx.Graph()
-graph.add_edges_from([(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)])
+graph.add_edges_from([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0)])
 
 # Initialize the search
 search = Primitive_ring_search(graph=graph, max_size=6)
