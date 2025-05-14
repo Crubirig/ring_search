@@ -7,6 +7,16 @@ from itertools import combinations
 from collections import deque
 
 class Primitive_ring_search():
+    '''
+    Class to search primitive rings in a graph.
+    -----------------------------------------------------------------------------------------------
+    Attributes:
+            graph: networkx Graph object
+            max_size: largest ring size to look for
+            src_nodes: list[int] of nodes for which to search for primitive rings
+            distances: dict[dict[int]] containing the shortest path length between each pair of nodes
+            prim_rings: dict[list] containing every primitive rings computed
+    '''
     def __init__(self, graph:nx.Graph, max_size:int, distances:dict[dict]=None, src_nodes:list=[0], prim_rings:dict=None):
         self.graph = graph
         self.max_size = max_size
@@ -28,7 +38,7 @@ class Primitive_ring_search():
         '''
         Find all shortest paths between two nodes in a graph, knowing the length of those paths. 
         This is much faster than when the length is not known.
-
+        -------------------------------------------------------------------------------------------
         Inputs:
             graph: networkx Graph object
             starting_node: starting node index
@@ -206,7 +216,7 @@ class Primitive_ring_search():
         print(f"Computing primitive rings on {len(self.src_nodes)} atoms took in total {end - start} seconds")
         return all_rings
     
-    def plot(self, color="blue", label_loc=0.005):
+    def plot(self, color="blue", label_loc=0.005, normalized:bool=False):
         '''
         Plot a bar chart of ring sizes and occurence.
         -------------------------------------------------------------------
@@ -215,6 +225,8 @@ class Primitive_ring_search():
                 label_loc float locate label of ring occurence
         '''
         ring_per_si = np.array(list(self.prim_rings.values()))
+        if normalized is True:
+            ring_per_si = np.array(list(self.prim_rings.values()))/len(self.src_nodes)
 
         def addlabels(x,y, col, label_height):
             for i in range(len(x)):
