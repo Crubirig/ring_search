@@ -172,6 +172,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-Example/
-*.xyz
-*.ipynb
+Old_Example/
+docs/
