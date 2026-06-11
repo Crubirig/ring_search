@@ -216,7 +216,7 @@ class Primitive_ring_search():
         print(f"Computing primitive rings on {len(self.src_nodes)} atoms took in total {end - start} seconds")
         return all_rings
     
-    def plot(self, color="blue", label_loc=0.005, normalized:bool=False):
+    def plot(self, color="blue", label_loc=0.005, label_size=7, normalized:bool=False, ax=None):
         '''
         Plot a bar chart of ring sizes and occurence.
         -------------------------------------------------------------------
@@ -224,18 +224,24 @@ class Primitive_ring_search():
                 color: str a matploytlib color
                 label_loc float locate label of ring occurence
         '''
+
+        if ax is None:
+            fig, ax =plt.subplots()
+
         ring_per_si = np.array(list(self.prim_rings.values()))
         if normalized is True:
             ring_per_si = np.array(list(self.prim_rings.values()))/len(self.src_nodes)
 
-        def addlabels(x,y, col, label_height):
+        def addlabels(x,y, col, label_height, lab_size):
             for i in range(len(x)):
                 if y[i] - 0.00 > 0.05:
-                    plt.text(x[i], y[i] + label_height*max(y), f"{y[i]:.2f}", ha = 'center', size=7, c=col, weight="bold")
+                    ax.text(x[i], y[i] + label_height*max(y), f"{y[i]:.2f}", ha = 'center', size=lab_size, c=col, weight="bold")
 
-        plt.bar(self.prim_rings.keys(), ring_per_si, color=color)
-        addlabels(x=list(self.prim_rings.keys()), y=ring_per_si, col=color, label_height=label_loc)
-        plt.xlabel("Ring size")
+        ax.bar(self.prim_rings.keys(), ring_per_si, color=color)
+        addlabels(x=list(self.prim_rings.keys()), y=ring_per_si, col=color, label_height=label_loc, lab_size=label_size)
+        ax.set_xlabel("Ring size")
+
+        return ax
 
 
     
