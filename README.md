@@ -3,7 +3,9 @@ Python script to compute primitive rings of silica structure
 ![Amorphous ring illustration](Amorphous_Ring.png)
 
 ## Overview
-This project provides tools to analyze silica structures and compute primitive rings using graph theory. It leverages the `networkx` library for graph operations and the `ase` library for handling atomic structures.
+This project provides tools to analyze silica structures and compute primitive rings using graph theory. It leverages the `networkx` library for graph operations and the `ase` library for handling atomic structures. 
+
+Read the following article to see an example: [Rubirigi, C.; Aprile, C.; Champagne, B. Sequential MD-QM Approach to Compute Chemical Properties of Amorphous Silica-Based Catalysts: Brønsted Aluminosilicate Acids as Case Study. *Advanced Theory and Simulations* **2026**, 9 (2), e01609](https://doi.org/10.1002/adts.202501609)
 
 ## Key Modules
 
